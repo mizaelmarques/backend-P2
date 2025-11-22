@@ -1,0 +1,44 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/app/Dockerfile
+    container_name: backend-p2-app
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./:/var/www/html
+    working_dir: /var/www/html/project
+    depends_on:
+      - mysql
+    environment:
+      - COMPOSER_ALLOW_SUPERUSER=1
+    command: >
+      bash -lc 'if [ -f artisan ]; then php artisan serve --host=0.0.0.0 --port=8000; else echo "Laravel app not found yet in /project. Container idle."; tail -f /dev/null; fi'
+
+  mysql:
+    image: mysql:8
+    container_name: backend-p2-mysql
+    restart: always
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_DATABASE=laravel
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_USER=laravel
+      - MYSQL_PASSWORD=laravel
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: backend-p2-phpmyadmin
+    depends_on:
+      - mysql
+    ports:
+      - "8080:80"
+    environment:
+      - PMA_HOST=mysql
+
+volumes:
+  mysql_data:
